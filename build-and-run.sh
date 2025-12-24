@@ -109,7 +109,16 @@ if [ "$MULTI_PLATFORM" = true ] || [[ "$BUILD_PLATFORMS" == *","* ]]; then
     fi
 else
     # 单平台构建
-    BUILD_CMD="docker build --platform ${BUILD_PLATFORMS} -t ${IMAGE_NAME} ."
+    # 如果目标平台与当前平台不同，使用 buildx 以支持跨平台构建
+    if [ "$BUILD_PLATFORMS" != "$CURRENT_PLATFORM" ]; then
+        echo "⚠️  跨平台构建：目标平台 (${BUILD_PLATFORMS}) 与当前平台 (${CURRENT_PLATFORM}) 不同"
+        echo "   使用 buildx 进行跨平台构建..."
+        # 确保使用 buildx
+        docker buildx inspect --bootstrap >/dev/null 2>&1 || true
+        BUILD_CMD="docker buildx build --platform ${BUILD_PLATFORMS} --load -t ${IMAGE_NAME} ."
+    else
+        BUILD_CMD="docker build --platform ${BUILD_PLATFORMS} -t ${IMAGE_NAME} ."
+    fi
 fi
 
 echo "执行构建命令: ${BUILD_CMD}"

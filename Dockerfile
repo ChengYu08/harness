@@ -50,12 +50,19 @@ ARG TARGETOS TARGETARCH
 RUN if [ "$TARGETARCH" = "arm64" ]; then \
     wget -P ~ https://musl.cc/aarch64-linux-musl-cross.tgz && \
     tar -xvf ~/aarch64-linux-musl-cross.tgz -C ~ ; \
+    elif [ "$TARGETARCH" = "amd64" ] && [ "$(uname -m)" != "x86_64" ]; then \
+    wget -P ~ https://musl.cc/x86_64-linux-musl-cross.tgz && \
+    tar -xvf ~/x86_64-linux-musl-cross.tgz -C ~ ; \
     fi
 
 # set required build flags
 RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/go/pkg \
-    if [ "$TARGETARCH" = "arm64" ]; then CC=~/aarch64-linux-musl-cross/bin/aarch64-linux-musl-gcc; fi && \
+    if [ "$TARGETARCH" = "arm64" ]; then \
+        CC=~/aarch64-linux-musl-cross/bin/aarch64-linux-musl-gcc; \
+    elif [ "$TARGETARCH" = "amd64" ] && [ "$(uname -m)" != "x86_64" ]; then \
+        CC=~/x86_64-linux-musl-cross/bin/x86_64-linux-musl-gcc; \
+    fi && \
     LDFLAGS="-X github.com/harness/gitness/version.GitCommit=${GIT_COMMIT} -X github.com/harness/gitness/version.major=${GITNESS_VERSION_MAJOR} -X github.com/harness/gitness/version.minor=${GITNESS_VERSION_MINOR} -X github.com/harness/gitness/version.patch=${GITNESS_VERSION_PATCH} -extldflags '-static'" && \
     CGO_ENABLED=1 \
     GOOS=$TARGETOS GOARCH=$TARGETARCH \
