@@ -12,5 +12,5 @@ docker run -d \
   -v /tmp/harness:/data \
   --name harness \
   --restart always \
-  spacewhisp/harness
+  spacewhisp/harness:v3.0.0
 ```
